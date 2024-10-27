@@ -1,0 +1,66 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from tensorflow.keras import layers
+
+# Step 1: Load the MNIST dataset
+mnist = keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# Step 2: Normalize the images to the range [0, 1]
+x_train = x_train.astype("float32") / 255.0
+x_test = x_test.astype("float32") / 255.0
+
+# Step 3: Visualize some samples
+plt.figure(figsize=(10, 5))
+for i in range(10):
+    plt.subplot(2, 5, i + 1)
+    plt.imshow(x_train[i], cmap='gray')
+    plt.title(f"Label: {y_train[i]}")
+    plt.axis('off')
+plt.show()
+
+# Step 4: Prepare the data
+x_train = x_train.reshape((60000, 28, 28, 1))
+x_test = x_test.reshape((10000, 28, 28, 1))
+y_train = keras.utils.to_categorical(y_train, 10)
+y_test = keras.utils.to_categorical(y_test, 10)
+
+# Step 5: Build the model
+model = keras.Sequential([
+    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(64, (3, 3), activation='relu'),
+    layers.MaxPooling2D((2, 2)),
+    layers.Flatten(),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(10, activation='softmax')
+])
+
+# Step 6: Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Step 7: Train the model
+model.fit(x_train, y_train, epochs=5, batch_size=64, validation_split=0.1)
+
+# Step 8: Evaluate the model
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print(f'\nTest accuracy: {test_acc}')
+
+# Step 9: Make predictions
+predictions = model.predict(x_test)
+
+# Function to plot the results
+def plot_predictions(images, predictions, true_labels, num=10):
+    plt.figure(figsize=(10, 5))
+    for i in range(num):
+        plt.subplot(2, 5, i + 1)
+        plt.imshow(images[i].reshape(28, 28), cmap='gray')
+        plt.title(f"Pred: {np.argmax(predictions[i])}\nTrue: {np.argmax(true_labels[i])}")
+        plt.axis('off')
+    plt.show()
+
+# Visualize predictions
+plot_predictions(x_test, predictions, y_test)
